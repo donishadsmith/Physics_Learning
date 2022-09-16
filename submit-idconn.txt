@@ -1,0 +1,29 @@
+#!/bin/bash
+#SBATCH --job-name=idconn-fci
+#SBATCH --time=60:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=4gb
+#SBATCH --account=iacc_nbc
+#SBATCH --qos=pq_nbc
+#SBATCH --partition=IB_40C_512G
+# Outputs ----------------------------------
+#SBATCH --output=/home/dsmit216/log/idconn-%j.out   
+#SBATCH --error=/home/dsmit216/log/idconn-%j.err   
+#SBATCH --mail-type=ALL,ARRAY_TASKS
+#SBATCH --mail-user=dsmit216@fiu.edu
+# ------------------------------------------
+
+pwd; hostname; date
+set -e
+
+#==============Shell script==============#
+#Load the software needed
+source /home/data/nbc/nbclab-env/py3_environment
+
+PROJECT=Laird_DIVA
+
+idconn /home/data/nbc/Laird_PhysicsLearning/dset-v2.0.0/ /home/Schaefer400_2mm.nii.gz fci--bids_db=/home/data/nbc/Laird_PhysicsLearning/dset-v2.0.0/dset-BIDSLayout.db_cache
+
+date
