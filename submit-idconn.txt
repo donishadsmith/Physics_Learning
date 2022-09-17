@@ -1,3 +1,5 @@
+#Script to use IDConn
+
 #!/bin/bash
 #SBATCH --job-name=idconn-fci
 #SBATCH --time=60:00:00
