@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import bids
-
+#Extracting DAN-DMN connectivity values for the PK task.
 
 deriv_dir = '/home/data/nbc/Laird_PhysicsLearning/dset-v2.0.0/derivatives'
 #Link to text file containing all 400 nodes. 
@@ -41,7 +41,7 @@ for subject in subjects:
                 dan_def_graph = graph.loc[default][dorsAttn]
                 out_file.at[(subject, session, condition), 'DorsAttn.Default.conn'] = np.mean(dan_def_graph.mean())
                 out_file.to_csv(f'{deriv_dir}/idconn-v0.1-presub+90.g6973d15/reas_dan-def_network-connectivity.tsv', sep='\t')
-                #Obtaining connectivity values for all nodes in DAN and VAN.
+                #Obtaining connectivity values for all nodes in DAN and DMN to create average within-network connectivity values using R script.
                 all = list(dorsAttn) + list(default)
                 dan_def_graph = graph.loc[all][all]
                 for i in dan_def_graph.index:
