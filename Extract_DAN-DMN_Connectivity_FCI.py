@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import bids
 
-
+#This script extracts connectivity values between all nodes within the DAN and DMN and averages the nodes between the DAN and DMN for the FCI task.
 deriv_dir = '/home/data/nbc/Laird_PhysicsLearning/dset-v2.0.0/derivatives'
 #Link to text file containing all 400 nodes. 
 labels = pd.read_csv('/home/dsmit216/schaefer400.txt', sep='\t', header=0, index_col=0)
@@ -39,7 +39,7 @@ for subject in subjects:
                 dan_def_graph = graph.loc[default][dorsAttn]
                 out_file.at[(subject, session, condition), 'DorsAttn.Default.conn'] = np.mean(dan_def_graph.mean())
                 out_file.to_csv(f'{deriv_dir}/idconn-v0.1-presub+90.g6973d15/fci_dan-def_network-connectivity.tsv', sep='\t')
-                #Obtaining connectivity values for all nodes in DAN and VAN to create within-network measures in R script.
+                #Obtaining connectivity values for all nodes in DAN and DMN to create average within-network connectivity values using R script.
                 all = list(dorsAttn) + list(default)
                 dan_def_graph = graph.loc[all][all]
                 for i in dan_def_graph.index:
