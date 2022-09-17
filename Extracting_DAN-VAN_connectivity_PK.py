@@ -1,15 +1,15 @@
 import pandas as pd
 import numpy as np
 import bids
-
+#This script extracts connectivity values between all nodes within the DAN and VAN and averages the nodes between the DAN and VAN for the PK task.
 
 deriv_dir = '/home/data/nbc/Laird_PhysicsLearning/dset-v2.0.0/derivatives'
-
+#Link to text file containing all 400 nodes. 
 labels = pd.read_csv('/home/dsmit216/schaefer400.txt', sep='\t', header=0, index_col=0)
 dorsAttn = labels[labels['Network'] == 'DorsAttn'].index
 ventAttn = labels[labels['Network'] == 'SalVentAttn'].index
 labels.rename({'Unnamed: 2': '#'}, axis=1, inplace=True)
-
+#Define task, session, and file location for IDConn.
 sessions = [1,2]
 task = 'reas'
 conditions = ['Reasoning', 'Baseline']
@@ -34,12 +34,12 @@ for subject in subjects:
                                     sep='\t', 
                                     header=0, 
                                     index_col=0)
-                
+                #Obtaining connectivity values for all nodes in DAN and VAN.
                 graph.columns = graph.columns.astype(int)
                 dan_van_graph = graph.loc[dorsAttn][ventAttn]
                 out_file.at[(subject, session, condition), 'DorsAttn.SalVenAttn.conn'] = np.mean(dan_van_graph.mean())
                 out_file.to_csv(f'{deriv_dir}/idconn-v0.1-presub+90.g6973d15/reas_dan-van_network-connectivity.tsv', sep='\t')
-
+                 #Obtaining connectivity values for all nodes in DAN and VAN to create average within-network connectivity values using R script.
                 all = list(dorsAttn) + list(ventAttn)
                 dan_van_graph = graph.loc[all][all]
                 for i in dan_van_graph.index:
