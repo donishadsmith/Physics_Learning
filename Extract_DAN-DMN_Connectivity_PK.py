@@ -20,7 +20,7 @@ layout = bids.BIDSLayout('/home/data/nbc/Laird_PhysicsLearning/dset-v2.0.0', der
 subjects = layout.get(return_type='id', target='subject', suffix='bold')
 
 index = pd.MultiIndex.from_product([subjects, sessions, conditions])
-out_file = pd.DataFrame(index=index, columns=['DorsAttn.Dmnault.conn'])
+out_file = pd.DataFrame(index=index, columns=['DorsAttn.Default.conn'])
 
 columns = pd.MultiIndex.from_product([dorsAttn, dmnault])
 dan_dmn_node_conn = pd.DataFrame(index=index, columns=columns)
@@ -39,7 +39,7 @@ for subject in subjects:
                 #Calculating mean of all nodes for the DAN and DMN for the between-network connectivity measure.
                 graph.columns = graph.columns.astype(int)
                 dan_dmn_graph = graph.loc[dmnault][dorsAttn]
-                out_file.at[(subject, session, condition), 'DorsAttn.Dmnault.conn'] = np.mean(dan_dmn_graph.mean())
+                out_file.at[(subject, session, condition), 'DorsAttn.Default.conn'] = np.mean(dan_dmn_graph.mean())
                 out_file.to_csv(f'{deriv_dir}/idconn-v0.1-presub+90.g6973d15/reas_dan-dmn_network-connectivity.tsv', sep='\t')
                 #Obtaining connectivity values for all nodes in DAN and DMN to create average within-network connectivity values using R script.
                 all = list(dorsAttn) + list(dmnault)
