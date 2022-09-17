@@ -1,3 +1,5 @@
+#This script includes the LPA and regression analysis for between- & within-network dan, van, and dmn connectivity.
+
 pacman::p_load(plyr,dplyr,lavaan, tidyLPA, mclust)
 #Importing spss dataset
 data = Hmisc::spss.get("~/Documents/MastersProject/NeuralMechanisms_SharedData.sav",use.value.labels = F)
@@ -14,7 +16,7 @@ science = data.frame(data[c(167:210)]); science  = science  %>% select(-starts_w
 math = data.frame(data[c(211:235)])
 beck = data.frame(data[c(51:71)])
 
-#Importing Years
+#Importing csv file containing enrollment years.
 behave = read.csv("~/Documents/MastersProject/BehavioralData.csv");rownames(behave) = behave$Enrollment.ID
 a = project[!(rownames(project) %in% rownames(behave)),] 
 temp = matrix(nrow = nrow(a), ncol = ncol(behave)) %>% data.frame()
@@ -73,7 +75,7 @@ project %>% select(SA, MA)  %>%estimate_profiles(1:4) %>% get_fit()
 
 project%>% select(SA, MA)  %>% estimate_profiles(4) %>% get_estimates()
 
-#Compare solutions.
+#Compare solutions of the 1,2,3, and 4 profile FCI model to select the best one.
 
 project %>% select(SA, MA) %>% estimate_profiles(1:4) %>% compare_solutions()
 
@@ -102,13 +104,13 @@ project[c(2,4:5,7)]  = project[c(2,4:5,7)] %>% sapply(function(x) as.factor(x))
 
 #Determining which individuals/rows are in which group for the Low STEM Anxiety group and the High Math Anxiety.
 #Including demographic variables for grouped participants
-g2dem = project[g2, 2:10]
-g3dem = project[g3, 2:10]
-g2dem['Anxiety.Profiles'] = rep('Low Anxiety', sum(tab[,2]>0.7)) # CI low for both
-g3dem['Anxiety.Profiles'] = rep('High Math Anxiety',sum(tab[,3]>0.7)) # Confidence intervals for math greater than zero, touches for science
+Low_STEM_Anxiety_dem = project[g2, 2:10]
+High_Math_Anxiety_dem = project[g3, 2:10]
+Low_STEM_Anxiety_dem['Anxiety.Profiles'] = rep('Low STEM Anxiety', sum(tab[,2]>0.7)) # CI low for both
+High_Math_Anxiety_dem['Anxiety.Profiles'] = rep('High Math Anxiety',sum(tab[,3]>0.7)) # Confidence intervals for math greater than zero, touches for science
 
-#Generating one data table
-ndata = rbind(g2dem,g3dem)
+#Generating one data table for all partcipants in the Low STEM anxiety and High Math Anxiety groups.
+ndata = rbind(Low_STEM_Anxiety_dem,High_Math_Anxiety_dem)
 
 #Importing tsv files containing the connectivity information.
 fcidanvan = read.table(file = '~/Documents/MastersProject/fci_dan-van_network-connectivity.tsv', sep = '\t', header = TRUE)
@@ -133,48 +135,48 @@ colnames(fcidanvanq) = c('ID', 'Session', 'Condition','danvanq')
 fcidanvanans = fcidanvan[(fcidanvan$X.2=='physicsXanswers'),]
 colnames(fcidanvanans) = c('ID', 'Session', 'Condition','danvanans')
 
-fcivandefscene = fcivandef[(fcivandef$X.2=='physicsXscenario'),]
-colnames(fcivandefscene) = c('ID', 'Session', 'Condition','vandefscene')
-fcivandefq = fcivandef[(fcivandef$X.2=='physicsXquestion'),]
-colnames(fcivandefq) = c('ID', 'Session', 'Condition','vandefq')
-fcivandefans = fcivandef[(fcivandef$X.2=='physicsXanswers'),]
-colnames(fcivandefans) = c('ID', 'Session', 'Condition','vandefans')
+fcivandmnscene = fcivandmn[(fcivandmn$X.2=='physicsXscenario'),]
+colnames(fcivandmnscene) = c('ID', 'Session', 'Condition','vandmnscene')
+fcivandmnq = fcivandmn[(fcivandmn$X.2=='physicsXquestion'),]
+colnames(fcivandmnq) = c('ID', 'Session', 'Condition','vandmnq')
+fcivandmnans = fcivandmn[(fcivandmn$X.2=='physicsXanswers'),]
+colnames(fcivandmnans) = c('ID', 'Session', 'Condition','vandmnans')
 
 pkdanvan =  read.table(file = '~/Documents/MastersProject/reas_dan-van_network-connectivity.tsv', sep = '\t', header = TRUE)
-pkdandef = read.table(file = '~/Documents/MastersProject/reas_dan-def_network-connectivity.tsv', sep = '\t', header = TRUE)
-pkvandef = read.table(file = '~/Documents/MastersProject/reas_van-def_network-connectivity.tsv', sep = '\t', header = TRUE)
+pkdandmn = read.table(file = '~/Documents/MastersProject/reas_dan-dmn_network-connectivity.tsv', sep = '\t', header = TRUE)
+pkvandmn = read.table(file = '~/Documents/MastersProject/reas_van-dmn_network-connectivity.tsv', sep = '\t', header = TRUE)
 
 pkdanvan = pkdanvan[(pkdanvan$X.2 =='Reasoning'),]
-pkdandef= pkdandef[(pkdandef$X.2 =='Reasoning'),]
-pkvandef = pkvandef[(pkvandef$X.2 =='Reasoning'),]
+pkdandmn= pkdandmn[(pkdandmn$X.2 =='Reasoning'),]
+pkvandmn = pkvandmn[(pkvandmn$X.2 =='Reasoning'),]
 
 colnames(pkdanvan) = c('ID', 'Session', 'Condition','pkdanvan')
-colnames(pkdandef) = c('ID', 'Session', 'Condition','pkdandef')
-colnames(pkvandef) = c('ID', 'Session', 'Condition','pkvandef')
+colnames(pkdandmn) = c('ID', 'Session', 'Condition','pkdandmn')
+colnames(pkvandmn) = c('ID', 'Session', 'Condition','pkvandmn')
 
 pkdanvan = pkdanvan[(pkdanvan$Session =='1'),]
-pkdandef= pkdandef[(pkdandef$Session =='1'),]
-pkvandef = pkvandef[(pkvandef$Session  =='1'),]
+pkdandmn= pkdandmn[(pkdandmn$Session =='1'),]
+pkvandmn = pkvandmn[(pkvandmn$Session  =='1'),]
 
 #Creating one dataframe containing all connectivity information
-t1= data.frame(fcidandefscene[c(1,2,4)],fcidandefq[4], fcidandefans[4], fcidanvanscene[4], fcidanvanq[4], fcidanvanans[4], fcivandefscene[4], fcivandefq[4], fcivandefans[4])
-t1 = data.frame(t1,pkdanvan[4], pkdandef[4], pkvandef[4]);rownames(t1) = t1$ID
+between_network= data.frame(fcidandmnscene[c(1,2,4)],fcidandmnq[4], fcidandmnans[4], fcidanvanscene[4], fcidanvanq[4], fcidanvanans[4], fcivandmnscene[4], fcivandmnq[4], fcivandmnans[4])
+between_network = data.frame(between_network,pkdanvan[4], pkdandmn[4], pkvandmn[4]);rownames(between_network) = between_network$ID
 
 #Ensuring the ID's for the connectivity data match the ID's for the dataframe containing the demographic information
-rownames(t1) = t1$ID
+rownames(between_network) = between_network$ID
 matchnames = rownames(ndata)
-x = ndata[!(rownames(ndata) %in% rownames(t1)),]
-temp = matrix(nrow = nrow(x), ncol = ncol(t1));temp = data.frame(temp);rownames(temp) = rownames(x);temp$X1 = c(rownames(x))
-colnames(temp) = colnames(t1)
-t1 = rbind(t1, temp);t1 = t1[rownames(ndata),];t1 = data.frame(t1, ndata)
-which(as.numeric(rownames(ndata)) - as.numeric(rownames(t1)) > 0)
+x = ndata[!(rownames(ndata) %in% rownames(between_network)),]
+temp = matrix(nrow = nrow(x), ncol = ncol(between_network));temp = data.frame(temp);rownames(temp) = rownames(x);temp$X1 = c(rownames(x))
+colnames(temp) = colnames(between_network)
+between_network = rbind(between_network, temp);between_network = between_network[rownames(ndata),];between_network = data.frame(between_network, ndata)
+which(as.numeric(rownames(ndata)) - as.numeric(rownames(between_network)) > 0)
 
 #Renaming demographic variables
-t1$Sex = t1$Sex %>% sapply(function(x) revalue(x,c( "1" = "0", "2"="1"))) %>% sapply(function(x) as.numeric(as.character(x)))
-t1$Ethnicity = t1$Ethnicity %>% sapply(function(x) revalue(x,c( "1" = "0", "2"="1"))) %>%sapply(function(x) as.numeric(as.character(x)))
-t1['Anxiety.Profiles'] = t1['Anxiety.Profiles'] %>% sapply(function(x) revalue(x,c( "Low Anxiety" = "0", "High Math Anxiety"="1"))) %>%sapply(function(x) as.numeric(as.character(x)))
-t1$Income= t1$Income %>% sapply(function(x) revalue(x,c('1' = '0', '2' = '1', '3' = '2', '4'='3', '5'='4', '6'='5'))) %>% sapply(function(x) as.numeric(as.character(x)))
-t1$Years= t1$Years %>% sapply(function(x) revalue(x,c('10' = '0', '20' = '1', '30' = '2', '40'='3'))) %>% sapply(function(x) as.numeric(as.character(x)))
+between_network$Sex = between_network$Sex %>% sapply(function(x) revalue(x,c( "1" = "0", "2"="1"))) %>% sapply(function(x) as.numeric(as.character(x)))
+between_network$Ethnicity = between_network$Ethnicity %>% sapply(function(x) revalue(x,c( "1" = "0", "2"="1"))) %>%sapply(function(x) as.numeric(as.character(x)))
+between_network['Anxiety.Profiles'] = between_network['Anxiety.Profiles'] %>% sapply(function(x) revalue(x,c( "Low Anxiety" = "0", "High Math Anxiety"="1"))) %>%sapply(function(x) as.numeric(as.character(x)))
+between_network$Income= between_network$Income %>% sapply(function(x) revalue(x,c('1' = '0', '2' = '1', '3' = '2', '4'='3', '5'='4', '6'='5'))) %>% sapply(function(x) as.numeric(as.character(x)))
+between_network$Years= between_network$Years %>% sapply(function(x) revalue(x,c('10' = '0', '20' = '1', '30' = '2', '40'='3'))) %>% sapply(function(x) as.numeric(as.character(x)))
 
 #Using lavaan to create regression equations
 library(lavaan)
@@ -187,38 +189,37 @@ pkdanvan~~pkdanvan
 pkdanvan~1
 
 '
-model = lavaan(mod, data = t1)
+model = lavaan(mod, data = between_network)
 summary(model, fit.measures = T)
 
 mod = '
 
-pkdandef ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+pkdandmn ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
 
 
-pkdandef~~pkdandef
+pkdandmn~~pkdandmn
 
-pkdandef~1
+pkdandmn~1
 
 '
-model = lavaan(mod, data = t1)
+model = lavaan(mod, data = between_network)
 summary(model, fit.measures = T)
 
 
 mod = '
 
-pkvandef ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+pkvandmn ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
 
 
-pkvandef~~pkvandef
+pkvandmn~~pkvandmn
 
-pkvandef~1
+pkvandmn~1
 
 '
 
-model = lavaan(mod, data = t1)
+model = lavaan(mod, data = between_network)
 summary(model, fit.measures = T)
 
-summary(lm(danvanans~Anxiety.Profiles+ Sex + Years + Income + Age + Ethnicity  + GPA + BK  , data = t1))
 
 mod = '
 
@@ -238,281 +239,239 @@ danvanq~1
 danvanans~1
 '
 
-model = lavaan(mod, data = t1)
+model = lavaan(mod, data = between_network)
 summary(model, fit.measures = T)
 
 
 mod = '
 
-dandefscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-dandefq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-dandefans~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+dandmnscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+dandmnq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+dandmnans~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
 
-dandefscene~~dandefscene
-dandefq~~dandefq
-dandefans~~dandefans
+dandmnscene~~dandmnscene
+dandmnq~~dandmnq
+dandmnans~~dandmnans
 
-dandefscene~~dandefq + dandefans
-dandefq~~dandefans
+dandmnscene~~dandmnq + dandmnans
+dandmnq~~dandmnans
 
-dandefscene~1
-dandefq~1
-dandefans~1
+dandmnscene~1
+dandmnq~1
+dandmnans~1
 '
-model = lavaan(mod, data = t1)
+model = lavaan(mod, data = between_network)
 summary(model, fit.measures = T)
 
 
 mod = '
 
-dandefscene ~1
-dandefq~1
-dandefans~1
+vandmnscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+vandmnq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA +  BK
+vandmnans~Anxiety.Profiles+ Sex + Years + Income + Age + Ethnicity  + GPA +  BK
 
-dandefscene~~dandefscene
-dandefq~~dandefq
-dandefans~~dandefans
+vandmnscene~~vandmnscene
+vandmnq~~vandmnq
+vandmnans~~vandmnans
 
-dandefscene~~dandefq + dandefans
-dandefq~~dandefans
+vandmnscene~~vandmnq + vandmnans
+vandmnq~~vandmnans
 
-
+vandmnscene~1
+vandmnq~1
+vandmnans~1
 '
-model = lavaan(mod, data = t1)
-summary(model, fit.measures = T)
-
-
-
-
-mod = '
-
-vandefscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-vandefq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA +  BK
-vandefans~Anxiety.Profiles+ Sex + Years + Income + Age + Ethnicity  + GPA +  BK
-
-vandefscene~~vandefscene
-vandefq~~vandefq
-vandefans~~vandefans
-
-vandefscene~~vandefq + vandefans
-vandefq~~vandefans
-
-vandefscene~1
-vandefq~1
-vandefans~1
-'
-model = lavaan(mod, data = t1)
+model = lavaan(mod, data = between_network)
 summary(model, fit.measures = T)
 
 #Importing and manipulating data for within network connectivity
 
 library(stringr)
 #DAN within network connectivity for the FCI task
-node = read.table(file = '~/Documents/MastersProject/fci_dan-van_node-connectivity.tsv', sep = '\t', header = TRUE)
+dan_van_nodes = read.table(file = '~/Documents/MastersProject/fci_dan-van_node-connectivity.tsv', sep = '\t', header = TRUE)
 #These numbers corresponds to Dan nodes: 109-136=28; 313-335; 23 = 51; 2601 -51 = 2550
 #deletes every row that is not Session = 1
-dan = node[(node$X=='1'),]
-#Need row with labels
-dan=rbind(node[1,], dan[2:nrow(dan),])
-danb = dan[-c(1:3)]
+dan_van_nodes = dan_van_nodes[(dan_van_nodes$X=='1'),]
+#Column names are the nodes and the first row states the node that it is connected to  
+dan_van_nodes=rbind(dan_van_nodes[1,], dan_van_nodes[2:nrow(dan_van_nodes),])
+#Exclude columns 1:3 since they only contain ID and session information.                                                                                                                                         
+dan_van_nodes_reduced = dan_van_nodes[-c(1:3)]
 #Current format is of the are numbers that correspond with regions.
+#Column names are the nodes and the first row states the node that it is connected to.                                                                                                                                          
 #Currently, every column name has an X in front of the number.
 #The next code removes the X and allows the column names to be treated as numbers.
 #I can select colnames from certain regions.
-danb = danb %>% rename_all(~stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
-left = which(as.numeric(colnames(danb))>= 109 & as.numeric(colnames(danb))<137)
-right =  which(as.numeric(colnames(danb))>= 313 & as.numeric(colnames(danb))<336)
+dan_van_nodes_reduced = dan_van_nodes_reduced %>% rename_all(~stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
+#Extracting DAN nodes based on column information                                                                                                                                          
+left_hm =  which(as.numeric(colnames(dan_van_nodes_reduced))>= 109 & as.numeric(colnames(dan_van_nodes_reduced))<137)                                                                                                                                          
+right_hm =  which(as.numeric(colnames(dan_van_nodes_reduced))>= 313 & as.numeric(colnames(dan_van_nodes_reduced))<336)
 combined = c(left, right)  
-danb = danb[,combined]
-#First row corresponds to region labels. This code selects all labels related to dan.
-left = which(danb[1,]>= 109 & danb[1,]<137)
-right =  which(danb[1,]>= 313 & danb[1,]<336)
+dan_van_nodes_reduced = dan_van_nodes_reduced[,combined]
+#Extracting DAN nodes based on row information    
+left = which(dan_van_nodes_reduced[1,]>= 109 & dan_van_nodes_reduced[1,]<137)
+right =  which(dan_van_nodes_reduced[1,]>= 313 & dan_van_nodes_reduced[1,]<336)
 combined = c(left, right)  
-danb = danb[,combined]  
-danb2 = danb[-c(1),]
-del = colMeans(danb2, na.rm = T)
-del2 = which(del==1)
-danb2 = danb2[,-c(del2)]
-dancheck = danb2[!duplicated(as.list(danb2))]
-withindan = rowMeans(danb2)
-danb[c(2:nrow(danb)),2] - danb2[1]
+dan_nodes = dan_van_nodes_reduced[,combined]  
+#Removes first row containing node information                                                                                                                                           
+dan_nodes = dan_nodes[-c(1),]
+delete = colMeans(dan_nodes, na.rm = T)
+#Remove the columns of nodes that are correlated to themselves. These columns contains 1.                                                                                                                                           
+delete = which(delete==1)
+dan_nodes = dan_nodes[,-c(delete)]
+withindan_fci = rowMeans(dan_nodes)
 
 
 #These numbers corresponds to Dan nodes: 109-136=28; 313-335; 23 = 51; 2601 -51 = 2550
-#DAN within network connectivity for the PK task
+#DAN within network connectivity for the PK task.
+dan_van_nodes_pk = read.table(file = '~/Documents/MastersProject/reas_dan-van_node-connectivity.tsv', sep = '\t', header = TRUE)
+#These numbers corresponds to Dan nodes: 109-136=28; 313-335; 23 = 51; 2601 -51 = 2550
+#Deletes every row that is not Session = 1.
+dan_van_nodes_pk = dan_van_nodes_pk[(dan_van_nodes_pk$X=='1'),]
+#Column names are the nodes_pk and the first row states the node that it is connected to.  
+dan_van_nodes_pk=rbind(dan_van_nodes_pk[1,], dan_van_nodes_pk[2:nrow(dan_van_nodes_pk),])
+#Exclude columns 1:3 since they only contain ID and session information.                                                                                                                                         
+dan_van_nodes_pk_reduced = dan_van_nodes_pk[-c(1:3)]
+#Current format is of the are numbers that correspond with regions.
+#Column names are the nodes and the first row states the node that it is connected to.                                                                                                                                          
+#Currently, every column name has an X in front of the number.
+#The next code removes the X and allows the column names to be treated as numbers.
+#I can select colnames from certain regions.
+dan_van_nodes_pk_reduced = dan_van_nodes_pk_reduced %>% rename_all(~stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
+#Extracting DAN nodes_pk based on column information.                                                                                                                                          
+left_hm =  which(as.numeric(colnames(dan_van_nodes_pk_reduced))>= 109 & as.numeric(colnames(dan_van_nodes_pk_reduced))<137)                                                                                                                                          
+right_hm =  which(as.numeric(colnames(dan_van_nodes_pk_reduced))>= 313 & as.numeric(colnames(dan_van_nodes_pk_reduced))<336)
+combined = c(left, right)  
+dan_van_nodes_pk_reduced = dan_van_nodes_pk_reduced[,combined]
+#Extracting DAN nodes_pk based on row information.    
+left = which(dan_van_nodes_pk_reduced[1,]>= 109 & dan_van_nodes_pk_reduced[1,]<137)
+right =  which(dan_van_nodes_pk_reduced[1,]>= 313 & dan_van_nodes_pk_reduced[1,]<336)
+combined = c(left, right)  
+dan_nodes_pk = dan_van_nodes_pk_reduced[,combined]  
+#Removes first row containing node information.                                                                                                                                           
+dan_nodes_pk = dan_nodes_pk[-c(1),]
+delete = colMeans(dan_nodes_pk, na.rm = T)
+#Remove the columns of nodes_pk that are correlated to themselves. These columns contains 1.                                                                                                                                           
+delete = which(delete==1)
+dan_nodes_pk = dan_nodes_pk[,-c(delete)]
+withindan_pk = rowMeans(dan_nodes_pk)
 
-nodepk = read.table(file = '~/Documents/MastersProject/reas_dan-van_node-connectivity.tsv', sep = '\t', header = TRUE)
-danpk = nodepk[(nodepk$X=='1'),]
-danpk=rbind(nodepk[1,], danpk[2:nrow(danpk),])
-danpkb = danpk[-c(1:3)]
-danpkb = danpkb %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
-left = which(as.numeric(colnames(danpkb))>= 109 & as.numeric(colnames(danpkb))<137)
-right =  which(as.numeric(colnames(danpkb))>= 313 & as.numeric(colnames(danpkb))<336)
-combined = c(left, right)  
-danpkb = danpkb[,combined]
-left = which(danpkb[1,]>= 109 & danpkb[1,]<137)
-right =  which(danpkb[1,]>= 313 & danpkb[1,]<336)
-combined = c(left, right)  
-danpkb = danpkb[,combined]  
-danpkb2 = danpkb[-c(1),]
-del = colMeans(danpkb2, na.rm = T)
-del2 = which(del==1)
-danpkb2 = danpkb2[,-c(del2)]
-danpkcheck = danpkb2[!duplicated(as.list(danpkb2))]
-withindanpk = rowMeans(danpkb2)
-danpkb[c(2:nrow(danpkb)),2] - danpkb2[1]
 
 
 #These numbers corresponds to VAN nodes: 85-108= 24; 285-312 = 28 = 2704 - 52 = 2652
 #VAN within network connectivity for tthe FCI task
-
-van = node[(node$X=='1'),]
-van=rbind(node[1,], van[2:nrow(van),])
-vanb = van[-c(1:3)]
-vanb = vanb %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
-left = which(as.numeric(colnames(vanb))>= 85 & as.numeric(colnames(vanb))<109)
-right =  which(as.numeric(colnames(vanb))>= 285 & as.numeric(colnames(vanb))<313)
+dan_van_nodes_reduced = dan_van_nodes[-c(1:3)]
+dan_van_nodes_reduced  = dan_van_nodes_reduced %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
+left = which(as.numeric(colnames(dan_van_nodes_reduced ))>= 85 & as.numeric(colnames(dan_van_nodes_reduced ))<109)
+right =  which(as.numeric(colnames(dan_van_nodes_reduced ))>= 285 & as.numeric(colnames(dan_van_nodes_reduced ))<313)
 combined = c(left, right)  
-vanb = vanb[,combined]
-left = which(vanb[1,]>= 85 & vanb[1,]<109)
-right =  which(vanb[1,]>= 285 &vanb[1,]<313)
+dan_van_nodes_reduced  = dan_van_nodes_reduced[,combined]
+left = which(dan_van_nodes_reduced[1,]>= 85 & dan_van_nodes_reduced[1,]<109)
+right =  which(dan_van_nodes_reduced[1,]>= 285 &dan_van_nodes_reduced[1,]<313)
 combined = c(left, right)  
-vanb = vanb[,combined]
-vanb2 = vanb[-c(1),]
-del = colMeans(vanb2, na.rm = T)
-del2 = which(del==1)
-vanb2 = vanb2[,-c(del2)]
-vancheck = vanb2[!duplicated(as.list(vanb2))]
-withinvan = rowMeans(vanb2) 
-vanb[c(2:nrow(vanb)),2] - vanb2[1]
+van_nodes = dan_van_nodes_reduced[,combined]
+van_nodes = van_nodes[-c(1),]
+delete = colMeans(van_nodes, na.rm = T)
+delete = which(delete==1)
+van_nodes = van_nodes[,-c(van_nodes)]
+withinvan_fci = rowMeans(van_nodes) 
 
 #These numbers corresponds to VAN nodes: 85-108= 24; 285-312 = 28 = 2704 - 52 = 2652
 # VAN Within network connectivity for the PK task
-vanpk = nodepk[(nodepk$X=='1'),]
-vanpk=rbind(nodepk[1,], vanpk[2:nrow(vanpk),])
-vanpkb = vanpk[-c(1:3)]
-vanpkb = vanpkb %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
-left = which(vanpkb[1,]>= 85 & vanpkb[1,]<109)
-right =  which(vanpkb[1,]>= 285 & vanpkb[1,]<313)
+dan_van_nodes_pk_reduced = dan_van_nodes_pk[-c(1:3)]
+dan_van_nodes_pk_reduced  = dan_van_nodes_pk_reduced %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
+left = which(as.numeric(colnames(dan_van_nodes_pk_reduced ))>= 85 & as.numeric(colnames(dan_van_nodes_pk_reduced ))<109)
+right =  which(as.numeric(colnames(dan_van_nodes_pk_reduced ))>= 285 & as.numeric(colnames(dan_van_nodes_pk_reduced ))<313)
 combined = c(left, right)  
-vanpkb = vanpkb[,combined]
-left = which(as.numeric(colnames(vanpkb))>= 85 & as.numeric(colnames(vanpkb))<109)
-right = which(as.numeric(colnames(vanpkb))>= 285 & as.numeric(colnames(vanpkb))<313)
+dan_van_nodes_pk_reduced  = dan_van_nodes_pk_reduced[,combined]
+left = which(dan_van_nodes_pk_reduced[1,]>= 85 & dan_van_nodes_pk_reduced[1,]<109)
+right =  which(dan_van_nodes_pk_reduced[1,]>= 285 &dan_van_nodes_pk_reduced[1,]<313)
 combined = c(left, right)  
-vanpkb = vanpkb[,combined]
-vanpkb2 = vanpkb[-c(1),]
-del = colMeans(vanpkb2, na.rm = T)
-del2 = which(del==1)
-vanpkb2 = vanpkb2[,-c(del2)]
-vanpkcheck = vanpkb2[!duplicated(as.list(vanpkb2))]
-withinvanpk = rowMeans(vanpkb2) 
-vanpkb[c(2:nrow(vanpkb)),2] - vanpkb2[1]
-
+van_nodes_pk = dan_van_nodes_pk_reduced[,combined]
+van_nodes_pk = van_nodes_pk[-c(1),]
+delete = colMeans(van_nodes_pk, na.rm = T)
+delete = which(delete==1)
+van_nodes_pk = van_nodes_pk[,-c(van_nodes_pk)]
+withinvan_pk = rowMeans(van_nodes_pk)
 
 
 #These numbers corresponds to DMN nodes: 1-41 = 41; 201-236 = 36; 77 = 5929 - 77 = 5852
 #DMN within network connectivity for the FCI task
-node2 = read.table(file = '~/Documents/MastersProject/fci_dan-def_node-connectivity.tsv', sep = '\t', header = TRUE)
-default = node2[(node2$X=='1'),]
-default=rbind(node2[1,], default[2:nrow(default),])
-defaultb = default[-c(1:3)]
-defaultb = defaultb %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
-left = which(as.numeric(colnames(defaultb))> 1 & as.numeric(colnames(defaultb))<42)
-right =  which(as.numeric(colnames(defaultb))>= 201 & as.numeric(colnames(defaultb))<237)
+dan_dmn_nodes = read.table(file = '~/Documents/MastersProject/fci_dan-dmn_node-connectivity.tsv', sep = '\t', header = TRUE)
+dan_dmn_nodes = dan_dmn_nodes[(dan_dmn_nodes$X=='1'),]
+dan_dmn_nodes=rbind(dan_dmn_nodes[1,], dan_dmn_nodes[2:nrow(dan_dmn_nodes),])
+dan_dmn_nodes_reduced = dan_dmn_nodes[-c(1:3)]
+dan_dmn_nodes_reduced  = dan_dmn_nodes_reduced  %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
+left = which(as.numeric(colnames(dan_dmn_nodes_reduced ))> 1 & as.numeric(colnames(dan_dmn_nodes_reduced ))<42)
+right =  which(as.numeric(colnames(dan_dmn_nodes_reduced ))>= 201 & as.numeric(colnames(dan_dmn_nodes_reduced ))<237)
 combined = c(left, right)  
-defaultb = defaultb[,combined]
-left = which(defaultb[1,]>= 1 & defaultb[1,]<42)
-right =  which(defaultb[1,]>= 201 & defaultb[1,]<237)
+dan_dmn_nodes_reduced  = dan_dmn_nodes_reduced[,combined]
+left = which(dan_dmn_nodes_reduced[1,]>= 1 & dan_dmn_nodes_reduced[1,]<42)
+right =  which(dan_dmn_nodes_reduced[1,]>= 201 & dan_dmn_nodes_reduced[1,]<237)
 combined = c(left, right)  
-defaultb = defaultb[,combined]  
-defaultb2 = defaultb[-c(1),]
-del = colMeans(defaultb2, na.rm = T)
-del2 = which(del==1)
-defaultb2 = defaultb2[,-c(del2)]
-defaultcheck = defaultb2[!duplicated(as.list(defaultb2))]
-withindef = rowMeans(defaultb2)
-defaultb[c(2:nrow(defaultb)),2] - defaultb2[1]
+dmn_nodes = dan_dmn_nodes_reduced[,combined]  
+dmn_nodes= dmn_nodes[-c(1),]
+delete = colMeans(dmn_nodes, na.rm = T)
+delete = which(delete==1)
+dmn_nodes = dmn_nodes[,-c(delete)]
+withindmn_fci = rowMeans(dmn_nodes)
+
 
 
 #These numbers corresponds to DMN nodes: 1-41 = 41; 201-236 = 36; 77 = 5929 - 77 = 5852
 #DMN within network connectivity for the PK task
-
-nodepk2 = read.table(file = '~/Documents/MastersProject/reas_dan-def_node-connectivity.tsv', sep = '\t', header = TRUE)
-defaultpk = nodepk2[(nodepk2$X=='1'),]
-defaultpk=rbind(nodepk2[1,], defaultpk[2:nrow(defaultpk),])
-defaultpkb = defaultpk[-c(1:3)]
-defaultpkb = defaultpkb %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
-left = which(defaultpkb[1,]>= 1 & defaultpkb[1,]<42)
-right =  which(defaultpkb[1,]>= 201 & defaultpkb[1,]<237)
+dan_dmn_nodes_pk = read.table(file = '~/Documents/MastersProject/reas_dan-dmn_node-connectivity.tsv', sep = '\t', header = TRUE)
+dan_dmn_nodes_pk = dan_dmn_nodes_pk[(dan_dmn_nodes_pk$X=='1'),]
+dan_dmn_nodes_pk=rbind(dan_dmn_nodes_pk[1,], dan_dmn_nodes_pk[2:nrow(dan_dmn_nodes_pk),])
+dan_dmn_nodes_pk_reduced = dan_dmn_nodes_pk[-c(1:3)]
+dan_dmn_nodes_pk_reduced  = dan_dmn_nodes_pk_reduced  %>% rename_all(~ stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
+left = which(as.numeric(colnames(dan_dmn_nodes_pk_reduced ))> 1 & as.numeric(colnames(dan_dmn_nodes_pk_reduced ))<42)
+right =  which(as.numeric(colnames(dan_dmn_nodes_pk_reduced ))>= 201 & as.numeric(colnames(dan_dmn_nodes_pk_reduced ))<237)
 combined = c(left, right)  
-defaultpkb = defaultpkb[,combined] 
-left = which(as.numeric(colnames(defaultpkb))> 1 & as.numeric(colnames(defaultpkb))<42)
-right =  which(as.numeric(colnames(defaultpkb))>= 201 & as.numeric(colnames(defaultpkb))<237)
+dan_dmn_nodes_pk_reduced  = dan_dmn_nodes_pk_reduced[,combined]
+left = which(dan_dmn_nodes_pk_reduced[1,]>= 1 & dan_dmn_nodes_pk_reduced[1,]<42)
+right =  which(dan_dmn_nodes_pk_reduced[1,]>= 201 & dan_dmn_nodes_pk_reduced[1,]<237)
 combined = c(left, right)  
-defaultpkb = defaultpkb[,combined]
-defaultpkb2 = defaultpkb[-c(1),]
-del = colMeans(defaultpkb2, na.rm = T)
-del2 = which(del==1)
-defaultpkb2 = defaultpkb2[,-c(del2)]
-defaultpkcheck = defaultpkb2[!duplicated(as.list(defaultpkb2))]
-withindefpk = rowMeans(defaultpkb2)
-defaultpkb[c(2:nrow(defaultpkb)),2] - defaultpkb2[1]
+dmn_nodes_pk = dan_dmn_nodes_pk_reduced[,combined]  
+dmn_nodes_pk= dmn_nodes_pk[-c(1),]
+delete = colMeans(dmn_nodes_pk, na.rm = T)
+delete = which(delete==1)
+dmn_nodes_pk = dmn_nodes_pk[,-c(delete)]
+withindmn_pk = rowMeans(dmn_nodes_pk)
 
-withindan = c(NA, withindan)
-withinvan= c(NA, withinvan)
-withindef = c(NA, withindef)
-withindanpk = c(NA, withindanpk)
-withinvanpk= c(NA, withinvanpk)
-withindefpk= c(NA, withindefpk)
-dan$withindan = withindan
-van$withinvan = withinvan
-danpk$withindanpk = withindanpk
-vanpk$withinvanpk = withinvanpk
-default$withindef = withindef
-defaultpk$withindefpk = withindefpk
 
-withindanscene = dan[(dan$X.1=='physicsXscenario'),]
-withindanq = dan[(dan$X.1=='physicsXquestion'),]
-withindanans = dan[(dan$X.1=='physicsXanswers'),]
+#Addind NA so that thest vectors have the same length as the original data frame
+withindan_fci = c(NA, withindan_fci)
+withinvan= c(NA, withinvan_fci)
+withindmn_fci = c(NA, withindmn_fci)
+withindan_pk = c(NA, withindan_pk)
+withinvan_pk= c(NA, withinvan_pk)
+withindmn_pk= c(NA, withindmn_pk)
+dan_van_nodes$withindan_fci = withindan_fci
+dan_van_nodes$withinvan_fci = withinvan_fci
+dan_van_nodes_pk$withindan_pk = withindan_pk
+dan_van_nodes_pk$withinvan_pk = withinvan_pk
+dan_dmn_nodes$withindmn_fci = withindmn_fci
+dan_dmn_nodes_pk$withindmn_pk = withindmn_pk
 
-withinvanscene = van[(van$X.1=='physicsXscenario'),]
-withinvanq = van[(van$X.1=='physicsXquestion'),]
-withinvanans = van[(van$X.1=='physicsXanswers'),]
+withinscene = dan_van_nodes[(dan_van_nodes$X.1=='physicsXscenario'),]
+withinq = dan_van_nodes[(dan_van_nodes$X.1=='physicsXquestion'),]
+withinans = dan_van_nodes[(dan_van_nodes$X.1=='physicsXanswers'),]
+withindmnscene = dan_dmn_nodes[(dan_dmn_nodes$X.1=='physicsXscenario'),]
+withindmnq = dan_dmn_nodes[(dan_dmn_nodes$X.1=='physicsXquestion'),]
+withindmnans = dan_dmn_nodes[(dan_dmn_nodes$X.1=='physicsXanswers'),]
+withindan_van_pk = dan_van_nodes_pk[(dan_van_nodes_pk$X.1=='Reasoning'),]
+withindmn_pk = dan_dmn_nodes_pk[(dan_dmn_nodes_pk$X.1=='Reasoning'),]
 
-withinvanpk = vanpk[(vanpk$X.1=='Reasoning'),]
-withindanpk = danpk[(danpk$X.1=='Reasoning'),]
-
-withindefscene = default[(default$X.1=='physicsXscenario'),]
-withindefq = default[(default$X.1=='physicsXquestion'),]
-withindefans = default[(default$X.1=='physicsXanswers'),]
-
-withindefpk = defaultpk[(defaultpk$X.1=='Reasoning'),]
 
 #Creating single dataframe for the within-network connectivity measures
-within = data.frame(withindanscene[1],withindanscene[c('withindan')], withindanq['withindan'], withindanans['withindan'], withindanpk['withindanpk'],withinvanscene['withinvan'], withinvanq['withinvan'], withinvanans['withinvan'], withinvanpk['withinvanpk'], 
-                    withindefscene['withindef'], withindefq['withindef'], withindefans['withindef'], withindefpk['withindefpk'])
+within = data.frame(withindanscene[1],withinscene[c('withindan_fci')], withinq['withindan_fci'], withinans['withindan_fci'], withindan_van_pk['withindan_pk'],withinscene['withinvan_fci'], withinq['withinvan_fci'], withinans['withinvan_fci'], withindan_van_pk['withinvan_pk'], 
+                    withindmnscene['withindmn_fci'], withindmnq['withindmn_fci'], withindmnans['withindmn_fci'], withindmn_pk['withindmn_pk'])
 
-
+#Changing names of the columns
 colnames(within) = c('ID', 'withindanscene', 'withindanq', 'withindanans', 'withindanpk','withinvanscene', 'withinvanq', 'withinvanans', 'withinvanpk',
-                    'withindefscene', 'withindefq', 'withindefans', 'withindefpk')
+                    'withindmnscene', 'withindmnq', 'withindmnans', 'withindmnpk')
 
-rownames(within) = within$ID
-matchnames = rownames(ndata)
-x = ndata[!(rownames(ndata) %in% rownames(within)),]
-temp = matrix(nrow = nrow(x), ncol = ncol(within))
-temp = data.frame(temp)
-rownames(temp) = rownames(x)
-temp$X1 = as.numeric(rownames(x))
-colnames(temp) = colnames(within)
-within = within[(rownames(within) %in% matchnames),]
-within = rbind(within, temp)
-within=within[rownames(ndata),]
-within = data.frame(within, t1)
-as.numeric(rownames(ndata)) - as.numeric(rownames(within))
-as.numeric(rownames(t1)) - as.numeric(rownames(within))
-rownames(withindanans) = withindanans$label
-rownames(withinvanans) = withinvanans$label
-as.numeric(rownames(withindanans)) - as.numeric(rownames(withinvanans))
+within = data.frame(within, between)
 
 #Using lavaan for regression
 library(lavaan)
@@ -562,43 +521,24 @@ summary(model, fit.measures = T)
 
 mod = '
 
-withindefscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-withindefq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-withindefans~Anxiety.Profiles+ Sex + Years + Income + Age + Ethnicity  + GPA + BK
+withindmnscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+withindmnq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+withindmnans~Anxiety.Profiles+ Sex + Years + Income + Age + Ethnicity  + GPA + BK
 
-withindefscene~~withindefscene
-withindefq~~withindefq
-withindefans~~withindefans
+withindmnscene~~withindmnscene
+withindmnq~~withindmnq
+withindmnans~~withindmnans
 
-withindefscene~~withindefq +withindefans
-withindefq~~withindefans
+withindmnscene~~withindmnq +withindmnans
+withindmnq~~withindmnans
 
-withindefscene~1
-withindefq~1
-withindefans~1
+withindmnscene~1
+withindmnq~1
+withindmnans~1
 '
 
 model = lavaan(mod, data = within)
 summary(model, fit.measures = T)
-
-mod = '
-
-withindefscene ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-withindefq~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
-withindefans~Anxiety.Profiles+ Sex + Years + Income + Age + Ethnicity  + GPA + BK
-
-withindefscene~~withindefscene
-withindefq~~withindefq
-withindefans~~withindefans
-
-withindefscene~1
-withindefq~1
-withindefans~1
-'
-
-model= lavaan(mod, data = within)
-summary(model, fit.measures = T)
-
 
 
 mod = '
@@ -617,12 +557,12 @@ summary(model, fit.measures = T)
 
 mod = '
 
-withindefpk ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
+withindmnpk ~Anxiety.Profiles + Sex + Years + Income + Age + Ethnicity  + GPA + BK
 
-withindefpk~~withindefpk
+withindmnpk~~withindmnpk
 
 
-withindefpk~1
+withindmnpk~1
 
 '
 
@@ -646,36 +586,36 @@ summary(model, fit.measures = T)
 
 #Testing demographic differences
 
-# No difference for income 
-a = tabulate(factor(g3dem$Income))
-b = tabulate(factor(g2dem$Income))
+
+a = tabulate(factor(Low_STEM_Anxiety_dem$Income))
+b = tabulate(factor(High_Math_Anxiety_dem$Income))
 c = rbind(a,b)
 chisq.test(c,simulate.p.value=TRUE, B=1e6)
 
-a = tabulate(factor(g3dem$Sex))
-b = tabulate(factor(g2dem$Sex))
+a = tabulate(factor(Low_STEM_Anxiety_dem$Sex))
+b = tabulate(factor(High_Math_Anxiety_dem$Sex))
 c = rbind(a,b)
 chisq.test(c,simulate.p.value=TRUE , B=1e6)
 
-t1 = na.omit(g3dem$Years)
-t2 = na.omit(g2dem$Years)
+t1 = na.omit(Low_STEM_Anxiety_dem$Years)
+t2 = na.omit(High_Math_Anxiety_dem$Years)
 a = tabulate(factor(t1))
 b = tabulate(factor(t2))
 c = rbind(a,b)
 chisq.test(c,simulate.p.value=TRUE , B=1e6)
 
-t.test(g3dem$Age,g2dem$Age)
+t.test(Low_STEM_Anxiety_dem$Age,g2dem$Age)
 
-table(is.na(g3dem$BK))
-table(is.na(g2dem$BK))
+table(is.na(Low_STEM_Anxiety_dem$BK))
+table(is.na(High_Math_Anxiety_dem$BK))
 
-table(is.na(g3dem$GPA))
-table(is.na(g2dem$GPA))
+table(is.na(Low_STEM_Anxiety_dem$GPA))
+table(is.na(High_Math_Anxiety_dem$GPA))
 
-t1 = na.omit(g3dem$GPA)
-t2 = na.omit(g2dem$GPA)
+t1= na.omit(Low_STEM_Anxiety_dem$GPA)
+t2 = na.omit(High_Math_Anxiety_dem$GPA)
 
-t.test(g3dem$GPA,na.omit(g2dem$GPA))
+t.test(Low_STEM_Anxiety_dem$GPA,na.omit(High_Math_Anxiety_dem$GPA))
 t.test(t1,t2)
 
 pkacc = read.delim("~/Documents/MastersProject/reas_accuracy_by_gender_pre.txt", header = T, sep = "\t", dec = ".")
@@ -709,7 +649,7 @@ fciacc = fciacc[rownames(ndata),]
 which(as.numeric(rownames(fciacc)) - as.numeric(rownames(ndata)) > 0)
 
 fciacc$groups = ndata$Anxiety.Profiles
-g1 = fciacc[fciacc$groups == 'Low Anxiety',]
+g1 = fciacc[fciacc$groups == 'Low STEM Anxiety',]
 g2 = fciacc[fciacc$groups == 'High Math Anxiety',]
 
 t.test(g1$Mean.FCI.Accuracy,g2$Mean.FCI.Accuracy)
@@ -720,7 +660,7 @@ t.test(g1$Mean.FCI.Accuracy,g2$Mean.FCI.Accuracy)
 
 
 pkacc$groups = ndata$Anxiety.Profiles
-g1 = pkacc[pkacc$groups == 'Low Anxiety',]
+g1 = pkacc[pkacc$groups == 'Low STEM Anxiety',]
 g2 = pkacc[pkacc$groups == 'High Math Anxiety',]
 t.test(g1$MeanReasoningAccuracy,g2$MeanReasoningAccuracy)
 
