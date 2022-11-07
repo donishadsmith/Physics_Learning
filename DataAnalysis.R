@@ -1,5 +1,5 @@
-#This script includes the LPA and regression analysis for between- & within-network dan, van, and dmn connectivity.
-#In the process of renaming variables for better readability
+#This script that I made includes the LPA and regression analysis for between- & within-network dan, van, and dmn connectivity.
+#I'm in the process of renaming variables for better readability.
 pacman::p_load(plyr,dplyr,lavaan, tidyLPA, mclust)
 #Importing spss dataset
 data = Hmisc::spss.get("~/Documents/MastersProject/NeuralMechanisms_SharedData.sav",use.value.labels = F)
