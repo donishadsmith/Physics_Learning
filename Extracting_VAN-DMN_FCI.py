@@ -1,3 +1,4 @@
+## Credit to Katie Bottenhorn for this script. Github: https://github.com/62442katieb
 import pandas as pd
 import numpy as np
 import bids
