@@ -1,4 +1,5 @@
 #Script to use IDConn
+## Credit to Katie Bottenhorn for this script. Github: https://github.com/62442katieb
 
 #!/bin/bash
 #SBATCH --job-name=idconn-fci
