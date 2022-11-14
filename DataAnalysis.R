@@ -1,5 +1,5 @@
 #This script that I made includes the LPA and regression analysis for between- & within-network dan, van, and dmn connectivity.
-#I'm in the process of renaming variables for better readability.
+
 pacman::p_load(plyr,dplyr,lavaan, tidyLPA, mclust)
 #Importing spss dataset
 data = Hmisc::spss.get("~/Documents/MastersProject/NeuralMechanisms_SharedData.sav",use.value.labels = F)
@@ -303,8 +303,8 @@ dan_van_nodes_reduced = dan_van_nodes[-c(1:3)]
 #I can select colnames from certain regions.
 dan_van_nodes_reduced = dan_van_nodes_reduced %>% rename_all(~stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
 #Extracting DAN nodes based on column information                                                                                                                                          
-left_hm =  which(as.numeric(colnames(dan_van_nodes_reduced))>= 109 & as.numeric(colnames(dan_van_nodes_reduced))<137)                                                                                                                                          
-right_hm =  which(as.numeric(colnames(dan_van_nodes_reduced))>= 313 & as.numeric(colnames(dan_van_nodes_reduced))<336)
+left =  which(as.numeric(colnames(dan_van_nodes_reduced))>= 109 & as.numeric(colnames(dan_van_nodes_reduced))<137)                                                                                                                                          
+right =  which(as.numeric(colnames(dan_van_nodes_reduced))>= 313 & as.numeric(colnames(dan_van_nodes_reduced))<336)
 combined = c(left, right)  
 dan_van_nodes_reduced = dan_van_nodes_reduced[,combined]
 #Extracting DAN nodes based on row information    
@@ -338,8 +338,8 @@ dan_van_nodes_pk_reduced = dan_van_nodes_pk[-c(1:3)]
 #I can select colnames from certain regions.
 dan_van_nodes_pk_reduced = dan_van_nodes_pk_reduced %>% rename_all(~stringr::str_replace(., regex("^x", ignore_case = TRUE), ""))
 #Extracting DAN nodes_pk based on column information.                                                                                                                                          
-left_hm =  which(as.numeric(colnames(dan_van_nodes_pk_reduced))>= 109 & as.numeric(colnames(dan_van_nodes_pk_reduced))<137)                                                                                                                                          
-right_hm =  which(as.numeric(colnames(dan_van_nodes_pk_reduced))>= 313 & as.numeric(colnames(dan_van_nodes_pk_reduced))<336)
+left =  which(as.numeric(colnames(dan_van_nodes_pk_reduced))>= 109 & as.numeric(colnames(dan_van_nodes_pk_reduced))<137)                                                                                                                                          
+right =  which(as.numeric(colnames(dan_van_nodes_pk_reduced))>= 313 & as.numeric(colnames(dan_van_nodes_pk_reduced))<336)
 combined = c(left, right)  
 dan_van_nodes_pk_reduced = dan_van_nodes_pk_reduced[,combined]
 #Extracting DAN nodes_pk based on row information.    
